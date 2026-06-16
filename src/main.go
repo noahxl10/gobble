@@ -16,6 +16,9 @@ import (
 	"encoding/csv"
 	"log"
 	"os"
+	// "reflect"
+	"unicode/utf8"
+	// "unsafe"
 )
 
 type schema struct {
@@ -39,32 +42,56 @@ func readCSV(path string, hasHeader bool) {
 			log.Fatal(err)
 		}
 		fmt.Println(header)
+	} else {
+		records, err := reader.ReadAll()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		numRecords := 100
+		records = records[0:numRecords]
+		
+		sumSize := 0
+		for _, row := range records {
+			sumSize += calculateArraySize(row, false)
+		}
+		fmt.Println(sumSize/numRecords)
 	}
-
-	// records, err := reader.ReadAll()
-	// records = records[0:10]
-	// fmt.Println(records)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-
-	// print out
-	// for _, row := range records {
-	// 	fmt.Println(row)
-	// }
-
 }
 
-// func CSVtoTable(path string, schema schema) {
+func calculateArraySize(row []string, assumeASCII bool) int {
+	// Calculates byte size of string array
+	size := 0 
 
-// }
+	for i, cell := range row {
+		if i > 0 {
+				size += 1 // add comma seperator byte, assume always ASCII
+		}
+		if assumeASCII {
+			size += len(cell)
+		} else {
+			for _, c := range cell {
+				bytes := utf8.RuneLen(c)
+				// fmt.Printf("%c -> %d bytes\n", c, bytes)
+				size += bytes
+			}
+		}
+	}
+	return size
+}
+
+
+func CSVtoTable(path string, schema schema) {
+	
+}
 
 
 
 func main() {
 	pth := "/Users/noahalex/develop/esii/ercot-zp15-612-zips/TEST_FILE.csv"
 	readCSV(pth, false)
+	// x := "10204049746606825 2703 BARON AVE  ABILENE TX 79606 TAYLOR 007923311 06 De-Energized Residential ERCOT TWILIGHT TWILIGHT Y  Residential Y AMSR N  "
+	// fmt.Println(len(x))
 	// CSVtoTable()
 }
 
